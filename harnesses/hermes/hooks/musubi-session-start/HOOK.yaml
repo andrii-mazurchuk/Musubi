@@ -1,0 +1,8 @@
+name: musubi-session-start
+description: |
+  Injects Musubi persona and per-user relationship state into the session
+  via Hermes's memory injection directory. Initializes state files for
+  new users from templates.
+events:
+  - session:start
+enabled: true

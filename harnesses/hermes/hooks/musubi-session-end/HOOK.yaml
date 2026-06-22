@@ -1,0 +1,8 @@
+name: musubi-session-end
+description: |
+  Pulls the completed session transcript from Hermes's SQLite store,
+  runs the Musubi processing agent via the Anthropic API, and writes
+  updated relationship state and memory files for this user.
+events:
+  - session:end
+enabled: true
