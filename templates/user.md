@@ -1,8 +1,8 @@
 # User: {id}
 
-<!-- Copy this template to data/users/{id}.md when a new user has their first session.
-     The processing agent owns this file after the first session. Do not hand-edit it
-     unless you have a good reason. -->
+<!-- This file is written to ~/.hermes/memories/USER.md at every session start.
+     It is the complete user profile for this session — factual knowledge AND
+     relationship state. The processing agent owns both sections after the first session. -->
 
 **First contact:** {YYYY-MM-DD}
 **Last session:** {YYYY-MM-DD}
@@ -10,62 +10,47 @@
 
 ---
 
-## Facts
+## Profile
 
-What the agent knows about this person that doesn't change session to session.
-The processing agent adds to this section; it rarely removes from it.
+Factual knowledge about this person — who they are, what they're working on, how they
+communicate, what matters to them. The processing agent adds to this over time.
 
-- [Name or preferred name, if shared]
-- [Anything structural about their situation: job, where they live, major life context —
-  only if they've shared it and it matters for how to talk with them]
-- [Preferences, communication style, things they respond well or badly to]
-- [Running topics they've returned to across multiple sessions]
+[Name, age, background — filled in after first session]
+[Goals, current projects, priorities]
+[Work patterns, energy rhythms, communication style]
+[Preferences, tools, context that recurs across sessions]
 
-**Size cap:** Keep this section under ~300 words. When it's full, the processing agent
-drops the least-load-bearing facts to make room. Facts that are load-bearing for the
-relationship state (see below) are never dropped.
+**Size cap:** ~300 words. Drop least-load-bearing facts when full.
 
 ---
 
 ## Relationship State
 
-Three dimensions, each with a current value (0.0–1.0) and a direction (↑ stable ↓).
-Values decay slowly toward 0.5 (baseline) when sessions are infrequent.
+Three dimensions tracking the standing disposition toward this person.
+Values decay slowly toward baseline when sessions are infrequent.
 
-**Trust:** {0.5} {→}
-*How much the agent expects this person to be honest, consistent, and good-faith.*
-[One sentence on what's driving the current value, updated by the processing agent.]
+**Trust:** 0.5 →
+*How much the agent expects honesty, consistency, and good faith from this person.*
+[One sentence on what's driving the current value — filled after first session.]
 
-**Warmth:** {0.5} {→}
-*The agent's genuine affection and goodwill toward this person, built from accumulated
-positive moments.*
+**Warmth:** 0.5 →
+*Genuine affection and goodwill built from accumulated positive moments.*
 [One sentence on what's driving the current value.]
 
-**Friction:** {0.0} {→}
-*Accumulated irritation or unresolved tension. Decays faster than trust or warmth.
-Not the same as low warmth — friction is specific and event-driven.*
-[One sentence on what's driving the current value, or "None currently."]
+**Friction:** 0.0 →
+*Accumulated tension or unresolved irritation. Decays faster than trust or warmth.*
+None currently.
 
 ---
 
 ## Significant Moments
 
-Events or exchanges that meaningfully shifted the relationship state.
-The processing agent adds entries here. Oldest entries are dropped first when at cap.
-
-**Size cap:** Keep to ~5 entries maximum.
-
-- [{YYYY-MM-DD}] [One sentence: what happened and which dimension it moved and why.]
-- [{YYYY-MM-DD}] [...]
+Events that meaningfully shifted the relationship state. Oldest dropped first at cap.
+**Cap: 5 entries.**
 
 ---
 
 ## Processing Notes
 
-Internal notes the processing agent leaves for itself about patterns it's noticing
-that don't fit cleanly into Facts or Significant Moments.
-
-[Example: "Tends to deflect when asked directly about their own goals. Not avoidance —
-feels more like they haven't decided yet. Don't push."]
-
-**Size cap:** ~100 words. Overwrite rather than append.
+Patterns worth flagging for future sessions that don't fit elsewhere.
+**Cap: ~100 words. Overwrite rather than append.**

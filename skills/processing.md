@@ -67,13 +67,21 @@ It is not punishment. It is physics.
 
 ## Step 3 — Update data/users/{id}.md
 
-Rewrite the file using the template schema. Keep everything that's still accurate.
-Add new facts if the session produced any. Drop facts that are clearly stale.
+This file is the full USER.md replacement. It has two distinct sections — both are yours
+to maintain. Rewrite the file completely when done.
 
-**Relationship State section:** Write the new values (after decay + delta).
-Update the direction arrow based on the trend over the last 2–3 sessions if you can
-infer it from Significant Moments; otherwise use the delta direction.
-Write one sentence explaining what's driving each dimension's current value.
+**Profile section** — factual knowledge about this person:
+- Add facts learned in this session (what they're working on, preferences, patterns).
+- Drop facts that are clearly stale or superseded.
+- Keep everything else as-is — do not paraphrase or summarize what's already there.
+- Cap at ~300 words. If at cap, drop the least load-bearing facts to make room.
+- Good facts: concrete, specific, likely to recur. Bad facts: vague, one-off, redundant.
+
+**Relationship State section** — write the new values (after decay + delta):
+- Update each dimension with the new computed value.
+- Update the direction arrow (→ flat, ↑ rising, ↓ falling) based on the delta.
+- Write one sentence explaining what's driving each dimension's current value.
+- Friction: if none, write "None currently."
 
 **Significant Moments:** If something in this session was significant enough to
 shift the relationship state by more than 0.05, add an entry. Date it. One sentence.
