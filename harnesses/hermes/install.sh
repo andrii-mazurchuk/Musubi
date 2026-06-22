@@ -5,9 +5,10 @@
 #
 # What it does:
 #   1. Creates ~/.hermes/musubi/ as the Musubi data directory
-#   2. Symlinks persona.md, skills/, and templates/ into that directory
+#   2. Symlinks persona.md, skills/, templates/, and personas/ from the repo
 #      so Hermes reads from the repo — pull updates, they take effect immediately
-#   3. Symlinks the two Musubi hooks into ~/.hermes/hooks/
+#   3. Symlinks all three Musubi hooks into ~/.hermes/hooks/
+#   4. Creates active_persona file if it doesn't exist
 #
 # Usage:
 #   ./harnesses/hermes/install.sh
@@ -16,8 +17,9 @@
 #   HERMES_DIR  Override Hermes home (default: ~/.hermes)
 #
 # After install:
-#   1. Fill in persona.md with your agent's identity
-#   2. Restart the Hermes gateway: hermes gateway restart
+#   1. Add personas in personas/<name>/persona.md
+#   2. Switch with: /persona switch <name>  or  ./harnesses/hermes/switch-persona.sh <name>
+#   3. Restart the Hermes gateway: hermes gateway restart
 
 set -euo pipefail
 
@@ -44,7 +46,7 @@ mkdir -p "$MUSUBI_INSTALL/data/memories"
 echo "  Created: $MUSUBI_INSTALL/data/"
 
 # --- Symlink repo files into the Musubi install directory ---
-for target in persona.md skills templates; do
+for target in persona.md skills templates personas; do
   link="$MUSUBI_INSTALL/$target"
   src="$REPO_DIR/$target"
 
@@ -64,10 +66,19 @@ for target in persona.md skills templates; do
   echo "  Linked: $link"
 done
 
+# --- Create active_persona file if it doesn't exist ---
+ACTIVE_FILE="$MUSUBI_INSTALL/active_persona"
+if [[ ! -f "$ACTIVE_FILE" ]]; then
+  touch "$ACTIVE_FILE"
+  echo "  Created: $ACTIVE_FILE (empty — using default persona.md until you switch)"
+else
+  echo "  Kept existing: $ACTIVE_FILE ($(cat "$ACTIVE_FILE" || echo 'empty'))"
+fi
+
 # --- Install hooks ---
 mkdir -p "$HOOKS_DIR"
 
-for hook in musubi-session-start musubi-session-end; do
+for hook in musubi-session-start musubi-session-end musubi-persona; do
   src="$REPO_DIR/harnesses/hermes/hooks/$hook"
   link="$HOOKS_DIR/$hook"
 
@@ -99,6 +110,9 @@ echo ""
 echo "Installation complete."
 echo ""
 echo "Next steps:"
-echo "  1. Edit $MUSUBI_INSTALL/persona.md with your agent's identity"
+echo "  1. Add a persona: cp $REPO_DIR/persona.md $REPO_DIR/personas/<name>/persona.md"
+echo "     Fill in your agent's identity, then switch to it:"
+echo "     /persona switch <name>"
+echo "     or: $REPO_DIR/harnesses/hermes/switch-persona.sh <name>"
 echo "  2. Restart the gateway: hermes gateway restart"
-echo "  3. Send a message to your agent and check $MUSUBI_INSTALL/data/users/ after the session"
+echo "  3. Send a message — check $MUSUBI_INSTALL/data/ after the session"

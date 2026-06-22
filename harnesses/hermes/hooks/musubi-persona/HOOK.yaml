@@ -1,0 +1,7 @@
+name: musubi-persona
+description: |
+  Handles /persona slash commands for switching and inspecting Musubi personas.
+  Supports: /persona switch <name>, /persona list, /persona current
+events:
+  - command:persona
+enabled: true

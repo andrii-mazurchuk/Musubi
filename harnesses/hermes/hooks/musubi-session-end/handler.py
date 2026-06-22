@@ -7,6 +7,9 @@ Musubi — session:end hook for Hermes.
    Musubi processing agent, which writes updated relationship state + memory files
    using its built-in Write tool.
 
+Multi-persona: reads active_persona file so the processing agent writes to the
+correct persona-scoped data paths.
+
 No external Python packages required — uses the same `claude -p` pattern as
 the rest of the Hermes agent infrastructure.
 
@@ -31,9 +34,31 @@ HERMES_DIR = Path.home() / ".hermes"
 MUSUBI_DIR = HERMES_DIR / "musubi"
 INJECT_DIR = HERMES_DIR / "memories"
 HERMES_DB = HERMES_DIR / "hermes_state.db"
-
-# claude CLI — matches the path used by the rest of the Hermes infrastructure
 CLAUDE = Path.home() / ".local" / "bin" / "claude"
+
+
+def _active_persona() -> tuple[str | None, Path]:
+    active_file = MUSUBI_DIR / "active_persona"
+    if active_file.exists():
+        name = active_file.read_text().strip()
+        if name:
+            persona_file = MUSUBI_DIR / "personas" / name / "persona.md"
+            if persona_file.exists():
+                return name, persona_file
+    return None, MUSUBI_DIR / "persona.md"
+
+
+def _data_paths(persona_name: str | None, musubi_id: str) -> tuple[Path, Path]:
+    if persona_name:
+        base = MUSUBI_DIR / "data"
+        return (
+            base / "users" / persona_name / f"{musubi_id}.md",
+            base / "memories" / persona_name / f"{musubi_id}.md",
+        )
+    return (
+        MUSUBI_DIR / "data" / "users" / f"{musubi_id}.md",
+        MUSUBI_DIR / "data" / "memories" / f"{musubi_id}.md",
+    )
 
 
 async def handle(event_type: str, context: dict) -> None:
@@ -53,21 +78,15 @@ async def handle(event_type: str, context: dict) -> None:
 
     transcript = _get_transcript(session_id)
     if not transcript:
-        return  # Empty or unreadable session — nothing to process
+        return
 
-    user_file = MUSUBI_DIR / "data" / "users" / f"{musubi_id}.md"
-    memories_file = MUSUBI_DIR / "data" / "memories" / f"{musubi_id}.md"
+    persona_name, persona_file = _active_persona()
+    user_file, memories_file = _data_paths(persona_name, musubi_id)
 
-    _run_processing_agent(musubi_id, transcript, user_file, memories_file)
+    _run_processing_agent(persona_file, transcript, user_file, memories_file)
 
 
 def _get_transcript(session_id: str) -> str:
-    """
-    Pull conversation turns from Hermes's SQLite store.
-
-    Tries two common schema patterns. If neither works, prints a diagnostic
-    and returns empty string so the session-end hook fails gracefully.
-    """
     import sqlite3
 
     if not HERMES_DB.exists():
@@ -75,9 +94,7 @@ def _get_transcript(session_id: str) -> str:
         return ""
 
     queries = [
-        # Pattern 1: messages table with session_id + created_at
         "SELECT role, content FROM messages WHERE session_id = ? ORDER BY created_at ASC",
-        # Pattern 2: messages table with session_id + id (no timestamp)
         "SELECT role, content FROM messages WHERE session_id = ? ORDER BY id ASC",
     ]
 
@@ -114,24 +131,17 @@ def _get_transcript(session_id: str) -> str:
 
 
 def _run_processing_agent(
-    musubi_id: str,
+    persona_file: Path,
     transcript: str,
     user_file: Path,
     memories_file: Path,
 ) -> None:
-    """
-    Spawn a headless Claude Code session to run the Musubi processing agent.
-
-    Uses `claude -p` — the same pattern as the Hermes agent infrastructure.
-    The agent receives all five required inputs inline in the prompt and writes
-    the two output files directly using its built-in Write tool.
-    """
     claude_bin = str(CLAUDE) if CLAUDE.exists() else shutil.which("claude")
     if not claude_bin:
         print("[musubi] claude CLI not found — cannot run processing agent.", file=sys.stderr)
         return
 
-    persona = (MUSUBI_DIR / "persona.md").read_text()
+    persona = persona_file.read_text() if persona_file.exists() else ""
     processing_skill = (MUSUBI_DIR / "skills" / "processing.md").read_text()
     user_state = user_file.read_text() if user_file.exists() else ""
     memories = memories_file.read_text() if memories_file.exists() else ""
@@ -199,7 +209,6 @@ You must write both files with their full absolute paths:
             print(f"[musubi] stderr: {result.stderr[:500]}", file=sys.stderr)
         return
 
-    # Verify both files were written
     missing = [p for p in (user_file, memories_file) if not p.exists()]
     if missing:
         print(f"[musubi] Warning: processing agent did not write: {missing}", file=sys.stderr)
