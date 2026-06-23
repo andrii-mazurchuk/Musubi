@@ -15,8 +15,11 @@ Context keys expected from Hermes:
 
 import re
 import sys
+import time
 from datetime import date
 from pathlib import Path
+
+LOCK_STALE_SECONDS = 300  # locks older than 5 minutes are considered stale
 
 HERMES_DIR = Path.home() / ".hermes"
 MUSUBI_DIR = HERMES_DIR / "musubi"
@@ -59,9 +62,12 @@ def _write_locked(path: Path, content: str) -> None:
     """Write a file respecting Hermes's .lock convention."""
     lock = path.with_suffix(path.suffix + ".lock")
     if lock.exists():
-        # Another process is writing — skip rather than corrupt
-        print(f"[musubi] Lock exists for {path.name} — skipping write.", file=sys.stderr)
-        return
+        age = time.time() - lock.stat().st_mtime
+        if age < LOCK_STALE_SECONDS:
+            print(f"[musubi] Lock exists for {path.name} ({age:.0f}s old) — skipping write.", file=sys.stderr)
+            return
+        print(f"[musubi] Removing stale lock for {path.name} ({age:.0f}s old).", file=sys.stderr)
+        lock.unlink(missing_ok=True)
     lock.touch()
     try:
         path.write_text(content)
