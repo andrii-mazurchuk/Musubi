@@ -1,12 +1,12 @@
 """
 Musubi — session:start hook for Hermes.
 
-Writes Musubi's per-persona user state directly into Hermes's native memory files:
-  - data/users/{persona}/{id}.md  →  ~/.hermes/memories/USER.md  (full replace)
-  - data/memories/{persona}/{id}.md  →  MEMORY.md Musubi section  (delimited replace)
+Writes Musubi's per-persona context directly into Hermes's native memory files:
+  - skills/talking.md               →  ~/.hermes/memories/musubi-talking.md  (full replace)
+  - data/users/{persona}/{id}.md    →  ~/.hermes/memories/USER.md            (full replace)
+  - data/memories/{persona}/{id}.md →  MEMORY.md Musubi section              (delimited replace)
 
 SOUL.md is written by the /persona switch command, not here.
-This hook only handles per-session user context and episodic memories.
 
 Context keys expected from Hermes:
     platform  — string identifier of the originating platform
@@ -133,6 +133,14 @@ async def handle(event_type: str, context: dict) -> None:
         notice_file.unlink()
 
     MEMORIES_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Write talking skill → musubi-talking.md so Hermes auto-loads it
+    talking_src = MUSUBI_DIR / "skills" / "talking.md"
+    if talking_src.exists():
+        _write_locked(MEMORIES_DIR / "musubi-talking.md", talking_src.read_text())
+    else:
+        print("[musubi] skills/talking.md not found — skipping talking skill injection.", file=sys.stderr)
+
     _write_locked(user_md, user_content)
 
     # Write episodic memories → MEMORY.md Musubi section
