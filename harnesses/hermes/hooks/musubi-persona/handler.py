@@ -22,6 +22,7 @@ from pathlib import Path
 
 HERMES_DIR = Path.home() / ".hermes"
 MUSUBI_DIR = HERMES_DIR / "musubi"
+ACTIVE_VOICE_FILE = MUSUBI_DIR / "active_voice"
 
 
 def _available_personas() -> list[str]:
@@ -41,6 +42,36 @@ def _current_persona() -> str | None:
         name = active_file.read_text().strip()
         return name if name else None
     return None
+
+
+def _apply_voice(persona_name: str) -> str:
+    """Read voice.yaml for persona and write active_voice file. Returns a status note."""
+    voice_file = MUSUBI_DIR / "personas" / persona_name / "voice.yaml"
+    if not voice_file.exists():
+        # No voice config — clear any active voice override so we fall back to config default
+        ACTIVE_VOICE_FILE.unlink(missing_ok=True)
+        return ""
+
+    try:
+        import yaml
+    except ImportError:
+        return "(voice.yaml found but PyYAML not available — voice not applied)"
+
+    try:
+        cfg = yaml.safe_load(voice_file.read_text()) or {}
+    except Exception as e:
+        return f"(voice.yaml parse error: {e})"
+
+    provider = cfg.get("provider", "").strip()
+    voice_id = cfg.get("voice_id", "").strip()
+
+    if voice_id:
+        ACTIVE_VOICE_FILE.write_text(voice_id)
+        return f"Voice: {provider or 'default'} / {voice_id[:8]}…"
+    else:
+        # Command-type providers have no voice_id — provider identity is fixed in config
+        ACTIVE_VOICE_FILE.unlink(missing_ok=True)
+        return f"Voice: {provider}" if provider else ""
 
 
 async def handle(event_type: str, context: dict) -> None:
@@ -86,7 +117,13 @@ async def handle(event_type: str, context: dict) -> None:
             f"simply begin as this persona from the first word."
         )
 
-        _write_reply(context, f"Switched to persona: {name}\nSOUL.md updated. Takes effect next session.")
+        # Apply voice settings if persona has a voice.yaml
+        voice_note = _apply_voice(name)
+
+        reply = f"Switched to persona: {name}\nSOUL.md updated. Takes effect next session."
+        if voice_note:
+            reply += f"\n{voice_note}"
+        _write_reply(context, reply)
 
     elif subcommand == "list":
         available = _available_personas()

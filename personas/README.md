@@ -1,25 +1,29 @@
 # Personas
 
 Each subdirectory here is a named persona. The name of the directory is what you use
-to switch to it: `/persona switch steward`, `/persona switch coach`, etc.
+to switch to it: `/persona switch asuka`, `/persona switch steward`, etc.
 
-Each persona directory contains one file:
+Each persona directory contains at minimum:
 
 ```
 personas/
-└── steward/
-    └── persona.md      ← the agent's identity when running as "steward"
+└── asuka/
+    ├── persona.md      ← the agent's identity (becomes SOUL.md on activation)
+    └── voice.yaml      ← TTS provider, voice ID, and expression bracket set
 ```
 
-`persona.md` inside each directory follows the same schema as the root `persona.md`.
-See the root file for the full schema.
+`persona.md` in each directory follows the compressed schema defined in the root `persona.md`.
+**Before writing a persona, read `AUTHORING.md` in this directory.** It documents the rules
+behind the schema — what each section does, why section order matters, how to write voice
+directives correctly, and the failure modes to avoid.
 
 ## Adding a persona
 
 1. Create a directory: `personas/<name>/`
-2. Copy and fill in: `cp persona.md personas/<name>/persona.md`
-3. Edit `personas/<name>/persona.md` with this persona's specific identity
-4. Switch to it: `/persona switch <name>`
+2. Copy the template: `cp persona.md personas/<name>/persona.md`
+3. Fill it in — read `AUTHORING.md` first, refer to `asuka/persona.md` as a worked example
+4. Create `personas/<name>/voice.yaml` with TTS config and expression bracket set
+5. Switch to it: `/persona switch <name>`
 
 ## Isolation
 
@@ -30,6 +34,15 @@ different relationship state, different memory. They do not know about each othe
 ## Shared infrastructure
 
 Skills (`skills/talking.md`, `skills/processing.md`) and templates are shared across
-all personas. Only `persona.md` differs. The skills reference the persona schema, so
-if you change the schema for one persona, the same skills still work — they adapt to
-whatever beliefs/values/standards are defined.
+all personas. Only `persona.md` and `voice.yaml` differ per persona. The skills
+reference the persona schema — they adapt to whatever identity is active.
+
+## Reference
+
+| File | What it does |
+|---|---|
+| `AUTHORING.md` | Authoring guide — schema rules, section order, sizing, failure modes |
+| `../persona.md` | Template — copy this when creating a new persona |
+| `asuka/persona.md` | Worked example of the compressed schema |
+| `asuka/voice.yaml` | Worked example of TTS voice configuration |
+| `../voice-research.md` | ElevenLabs v3 integration details and platform research |
